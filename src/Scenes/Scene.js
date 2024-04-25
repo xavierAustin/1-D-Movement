@@ -41,17 +41,17 @@ class OneDMovement extends Phaser.Scene {
             if (event.key == ' ')
                 this.shoot = 0;
         });
-        this.TIMESINCEEPOCH = new Date();
-        this.NEWTIME = this.TIMESINCEEPOCH.getTime();
+        //this.TIMESINCEEPOCH = new Date();
+        //this.NEWTIME = this.TIMESINCEEPOCH.getTime();
     }
     update(){
         //alternate method to do the uniform game logic speed thing we talked about in class
         //pros: allows for uncapped framerate; cons: ugly and complicated
-        let DELTATIMESCALAR = 16;
-        let PREVTIME = this.NEWTIME;
-        this.TIMESINCEEPOCH = new Date();
-        this.NEWTIME = this.TIMESINCEEPOCH.getTime();
-        let DELTATIME = (this.NEWTIME-PREVTIME)/DELTATIMESCALAR;
+        //let DELTATIMESCALAR = 16;
+        //let PREVTIME = this.NEWTIME;
+        //this.TIMESINCEEPOCH = new Date();
+        //this.NEWTIME = this.TIMESINCEEPOCH.getTime();
+        let DELTATIME = 1//(this.NEWTIME-PREVTIME)/DELTATIMESCALAR;
 
 
         for (let x of this.player){
