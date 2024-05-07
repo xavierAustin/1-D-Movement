@@ -7,14 +7,53 @@ let config = {
     fps: { target: 60, forceSetTimeOut: 1 }, 
     width: 800,
     height: 600,
-    scene: [Shmup]
+    scene: [TitleScreen,OptionsMenu,Shmup]
 }
 
+//credit to Nanoo on stack exchange for font loader function
+function loadFont(name, url) {
+    var newFont = new FontFace(name, `url(${url})`);
+    newFont.load().then(function (loaded) {
+        document.fonts.add(loaded);
+    }).catch(function (error) {
+        return error;
+    });
+}
+
+loadFont("QUINQUEFIVE", "./assets/visuals/QuinqueFive.ttf");
+loadFont("OLDFAX", "./assets/visuals/OldFax.ttf");
+loadFont("HEALZONE", "./assets/visuals/healzone.ttf");
+
 const game = new Phaser.Game(config);
+BGMACROSSLEVELS = null;
 SCORE = 0;
 LEVEL = 0;
-LIVES = 2;
-PATHS = {
+LIVES = 3;
+PARRYWINDOW = 0;
+ENDLESS = 0;
+FLASHINGSPEED = 4;
+PARTICLES = 1;
+DELTATIME = 1;
+AUDIO = {
+    mstr: 0.8,
+    bgm: 1,
+    sfx: 1
+};
+CONTROLCONFIG = {
+    up:"w",
+    upAlt:"arrowup",
+    dwn: "s",
+    dwnAlt:"arrowdown",
+    lft: "a",
+    lftAlt: "arrowleft",
+    rt: "d",
+    rtAlt: "arrowright",
+    sht: " ",
+    shtAlt: " ",
+    pry: "shift",
+    pryAlt: "shift"
+};
+const PATHS = {
     sine:[
         800,100,
         750,200,
@@ -134,24 +173,3 @@ PATHS = {
         500,300
     ]
 }
-FLASHINGSPEED = 4;
-DELTATIME = 1;
-AUDIO = {
-    mstr: 1,
-    bgm: 1,
-    sfx: 1
-};
-CONTROLCONFIG = {
-    up:"w",
-    upAlt:"ArrowUp",
-    dwn: "s",
-    dwnAlt:"ArrowDown",
-    lft: "a",
-    lftAlt: "ArrowLeft",
-    rt: "d",
-    rtAlt: "ArrowRight",
-    sht: " ",
-    shtAlt: " ",
-    pry: "Shift",
-    pryAlt: "Shift"
-};
