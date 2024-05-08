@@ -7,6 +7,10 @@ class OptionsMenu extends Phaser.Scene {
         this.load.audio("DREAD", "sephaCallCenterAtmosphere.wav");
     }
     create(){
+        //closed unit interval to string
+        function cuiToStr(float){
+            return "".padEnd(Math.floor(float*10),"0").padEnd(10,"`")
+        }
         this.bgm = this.sound.add("DREAD",{loop: 1});
         this.bgm.play();
         this.flashslow = 0;
@@ -42,11 +46,9 @@ class OptionsMenu extends Phaser.Scene {
         this.underButtons = {};
         let y = 105;
         for (let x of Object.keys(CONTROLCONFIG)){
-            let printed = (CONTROLCONFIG[x] == " ") ? "SPACE" : CONTROLCONFIG[x].toUpperCase().slice(0,8)
-            let newButton = (this.add.text(30,y,this.controls[x]+printed,{fontFamily:"'QUINQUEFIVE'",fontSize:15})).setInteractive();
-            let buttonBack = (this.add.text(30,y,newButton.text,{fontFamily:"'QUINQUEFIVE'",color:"#f00",fontSize:15}));
-            this.buttons[x] = newButton;
-            this.underButtons[x] = buttonBack;
+            let printed = (CONTROLCONFIG[x] == " ") ? "SPACE" : CONTROLCONFIG[x].toUpperCase().slice(0,8) 
+            this.buttons[x] = (this.add.text(30,y,this.controls[x]+printed,{fontFamily:"'QUINQUEFIVE'",fontSize:15})).setInteractive();
+            this.underButtons[x] = (this.add.text(30,y,this.buttons[x].text,{fontFamily:"'QUINQUEFIVE'",color:"#f00",fontSize:15}));
             this.buttons[x].depth = 5;
             this.buttons[x].over = 0;
             this.buttons[x].on('pointerover', () => {
@@ -68,10 +70,10 @@ class OptionsMenu extends Phaser.Scene {
             });
             y += 25;
         }
-        this.buttons[0] = (this.add.text(790,20,"BACK",{fontFamily:"'QUINQUEFIVE'",fontSize:15}).setOrigin(1,0)).setInteractive();
-        this.buttons[1] = (this.add.text(520,410,"00000000``",{fontFamily:"'QUINQUEFIVE'",fontSize:24})).setInteractive().setAngle(-90);
-        this.buttons[2] = (this.add.text(615,410,"0000000000",{fontFamily:"'QUINQUEFIVE'",fontSize:24})).setInteractive().setAngle(-90);
-        this.buttons[3] = (this.add.text(710,410,"0000000000",{fontFamily:"'QUINQUEFIVE'",fontSize:24})).setInteractive().setAngle(-90);
+        this.buttons[0] = (this.add.text(790,20,"BACK",{fontFamily:"'OLDFAX'",fontSize:24}).setOrigin(1,0)).setInteractive();
+        this.buttons[1] = (this.add.text(520,410,cuiToStr(AUDIO.mstr),{fontFamily:"'QUINQUEFIVE'",fontSize:24})).setInteractive().setAngle(-90);
+        this.buttons[2] = (this.add.text(615,410,cuiToStr(AUDIO.sfx),{fontFamily:"'QUINQUEFIVE'",fontSize:24})).setInteractive().setAngle(-90);
+        this.buttons[3] = (this.add.text(710,410,cuiToStr(AUDIO.bgm),{fontFamily:"'QUINQUEFIVE'",fontSize:24})).setInteractive().setAngle(-90);
         this.titles.push(this.add.text(520,105,"MASTER  SFX     BGM",{fontFamily:"'QUINQUEFIVE'",fontSize:10}));
         this.titles.push(this.add.text(25,450,"GAME SPEED:",{fontFamily:"'QUINQUEFIVE'",fontSize:15}));
         this.titles.push(this.add.text(25,475,"FLASH INTENSITY:",{fontFamily:"'QUINQUEFIVE'",fontSize:15}));
@@ -85,7 +87,7 @@ class OptionsMenu extends Phaser.Scene {
                 this.buttons[x].x,
                 this.buttons[x].y,
                 this.buttons[x].text,
-                {fontFamily:"'QUINQUEFIVE'",color:"#f00",fontSize:this.buttons[x].style.fontSize}
+                {fontFamily:this.buttons[x].style.fontFamily,color:"#f00",fontSize:this.buttons[x].style.fontSize}
             ).setOrigin(origin,0)).setAngle(this.buttons[x].angle);
             this.buttons[x].over = 0;
             this.buttons[x].on('pointerover', () => {
@@ -97,7 +99,7 @@ class OptionsMenu extends Phaser.Scene {
         }
         this.buttons[0].on('pointerdown', () =>{
             this.bgm.destroy()
-            this.scene.start('Shmup');
+            this.scene.start('TitleScreen');
         });
         this.input.keyboard.on('keydown',(event) => {
             if (this.keyToBind){
@@ -114,7 +116,8 @@ class OptionsMenu extends Phaser.Scene {
     update(){
         let mod = 14;
         this.flashslow = (this.flashslow + 0.01) % (Math.PI*2);
-        for (let x of Object.keys(CONTROLCONFIG).concat([0,1,2,3])){
+        for (let x of (Array.from(Array(4).keys())).concat(Object.keys(CONTROLCONFIG))){
+            console.log(this.buttons[x])
             if (!this.buttons[x].over)
                 this.buttons[x].alpha = (Math.sin(this.flashslow)+1)/3+0.001;
             else
