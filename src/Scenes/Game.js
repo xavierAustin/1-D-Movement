@@ -490,7 +490,7 @@ class Shmup extends Phaser.Scene {
         //handle player death
         if (this.corpse){
             BGMACROSSLEVELS.detune -= 5;
-            BGMACROSSLEVELS.rate = Math.min(BGMACROSSLEVELS.rate-0.01,0.01);
+            BGMACROSSLEVELS.rate -= 0.01;
             this.corpse.angle += 50*DELTATIME;
             this.corpse.x = Math.min(this.corpse.x + this.corpse.hsp*DELTATIME,780);
             this.corpse.y += this.corpse.vsp*DELTATIME;
