@@ -9,7 +9,8 @@ class GameOver extends Phaser.Scene {
         this.bgm = this.sound.add("DREAD",{volume: AUDIO.mstr*AUDIO.bgm,loop:1});
         this.bgm.play();
         this.titles = [
-            this.add.text(400,300,"GAME OVER",{fontFamily:"'OLDFAX'",fontSize:35}).setOrigin(0.5).setLetterSpacing(35)
+            this.add.text(400,300,"GAME OVER",{fontFamily:"'OLDFAX'",fontSize:35}).setOrigin(0.5).setLetterSpacing(35),
+            this.add.text(400,400,((""+Math.abs(SCORE%100000000)).padStart(8,"0")).padStart(10*(SCORE<0),"-"),{fontFamily:"'OLDFAX'",fontSize:15}).setOrigin(0.5).setLetterSpacing(35)
         ]
         this.underTitles = []
         for (let x of this.titles){
@@ -29,10 +30,13 @@ class GameOver extends Phaser.Scene {
             this.scene.start('TitleScreen');
             this.bgm.destroy()
         });
-        this.input.on('mousedown',() => {
+        this.input.on('pointerdown',() => {
             this.scene.start('TitleScreen');
             this.bgm.destroy()
         });
+        LIVES = 3;
+        HIGHSCORES.push(SCORE);
+        SCORE = 0;
     }
     update(){
         this.bgm.detune = (Math.sin(this.flashslow))*50-300;

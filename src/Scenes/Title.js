@@ -73,12 +73,12 @@ class TitleScreen extends Phaser.Scene {
             this.bgm.destroy();
         });
         this.buttons[2].on('pointerdown', () => {
-            this.buttons[2].text = "You can't.";
-            this.underButtons[2].text = "You can't.";
+            this.buttons[2].text = "WIP";
+            this.underButtons[2].text = "WIP";
         });
         this.buttons[3].on('pointerdown', () => {
-            this.buttons[3].text = "You can't.";
-            this.underButtons[3].text = "You can't.";
+            this.buttons[3].text = "WIP";
+            this.underButtons[3].text = "WIP";
         });
         this.buttons[4].on('pointerdown', () => {
             this.buttons[4].text = "You can't.";

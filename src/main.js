@@ -27,6 +27,7 @@ loadFont("HEALZONE", "./assets/visuals/healzone.ttf");
 const game = new Phaser.Game(config);
 BGMACROSSLEVELS = null;
 SCORE = 0;
+HIGHSCORES = [];
 LEVEL = 0;
 LIVES = 3;
 PARRYWINDOW = 1;

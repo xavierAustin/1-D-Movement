@@ -105,6 +105,7 @@ class Shmup extends Phaser.Scene {
                 case "escape":
                     this.scene.start('TitleScreen');
                     BGMACROSSLEVELS.destroy();
+                    BGMACROSSLEVELS = null;
                     break;
             }
         });
@@ -623,6 +624,7 @@ class Shmup extends Phaser.Scene {
         if (this.player.dead && this.fadeInOut.alpha >= 1){
             this.scene.start('GameOver');
             BGMACROSSLEVELS.destroy();
+            BGMACROSSLEVELS = null;
         }
             
     }
