@@ -7,7 +7,7 @@ let config = {
     fps: { target: 60, forceSetTimeOut: 1 }, 
     width: 800,
     height: 600,
-    scene: [TitleScreen,OptionsMenu,Shmup]
+    scene: [TitleScreen,OptionsMenu,Shmup,GameOver]
 }
 
 //credit to Nanoo on stack exchange for font loader function

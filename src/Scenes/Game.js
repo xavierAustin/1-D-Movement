@@ -36,6 +36,8 @@ class Shmup extends Phaser.Scene {
             BGMACROSSLEVELS.play();
         //i could set the depth of this a little lower but i like the way it looks so im keeping it
         this.backdrop = this.make.sprite({x:400,y:350,scale:{x:2,y:1.4},key:"BACKDROP",add:1,alpha:0.3});
+        this.fadeInOut = this.add.rectangle(400,300,1000,800,0xff0000,1)
+        this.fadeInOut.depth = 40;
         this.backdrop.currentframe = 0;
         this.backdrop.depth = -20;
         this.player = this.make.sprite({x:100,y:350,scale:{x:2,y:2},key:"SHIPS",add:1});
@@ -63,8 +65,11 @@ class Shmup extends Phaser.Scene {
             x.depth = 20;
         }
         this.enemies = [];
-        this.enemyBullet = [];
-        this.boundToEnemies = [];
+        //this.enemyBullet = [];
+        this.wavetimer = 0;
+        this.waves = [
+            ["sine",320]
+        ]
         this.waves = 0;
         //[250,"stop",150,350,"stop",100,"delay",200,"delay","flip",500,600,"stop","flip","delay",350,200,"flip",500,"end"];
 
@@ -236,41 +241,43 @@ class Shmup extends Phaser.Scene {
         }
         for (let x of this.enemies){
             //--flashing
-            x.setFrame(Math.floor(this.player.anim/FLASHINGSPEED)+28);
+            if (x.type != "bullet")
+                x.setFrame(Math.floor(this.player.anim/FLASHINGSPEED)+28);
 
             //--bullet collision
             //there are at max 7~ of these in existance so this shouldn't be all that time consuming
-            for (let y of this.myBullets){
-                //enemy ships are roughly 48 pixels large in game so might as well save some calculation time (shouldn't matter too much though)
-                //48/2 == 28 i promise
-                let lowestDist = 28+y.shotPower*24
-                if ((Math.abs(x.x-y.x) > lowestDist) || (Math.abs(x.y-y.y) > lowestDist))
-                    continue;
-                let bulletY = y.y;
-                if (y.shotPower){
-                    y.shotPower --;
-                    x.health = 0;
-                }else{
-                    y.destroy();
-                    this.myBullets.splice(this.myBullets.indexOf(y),1);
-                    x.health --;
+            if (x.type != "bullet")
+                for (let y of this.myBullets){
+                    //enemy ships are roughly 48 pixels large in game so might as well save some calculation time (shouldn't matter too much though)
+                    //48/2 == 28 i promise
+                    let lowestDist = 28+y.shotPower*24
+                    if ((Math.abs(x.x-y.x) > lowestDist) || (Math.abs(x.y-y.y) > lowestDist))
+                        continue;
+                    let bulletY = y.y;
+                    if (y.shotPower){
+                        y.shotPower --;
+                        x.health = 0;
+                    }else{
+                        y.destroy();
+                        this.myBullets.splice(this.myBullets.indexOf(y),1);
+                        x.health --;
+                    }
+                    if (!x.health){
+                        create_particle(12,x.x-100,x.y,0,0,0,0,-2,"EXPLODE",1,0,0.25);
+                        create_particle(16,x.x+70,x.y-70,0,0,0,0,-6,"EXPLODE",1,0,0.25);
+                        create_particle(14,x.x+34,x.y+94,0,0,0,0,-4,"EXPLODE",1,0,0.25);
+                        create_particle(10,x.x,x.y,0,0,0,0,1,"EXPLODE",0.5); 
+                        //oh yeah i should mention this is a 1 sized explosion that plays at half speed
+                        //it's not a 0.5 sized explosion and isn't meant to be
+                        x.destroy();
+                        this.enemies.splice(this.enemies.indexOf(x),1);
+                        SCORE += 320;
+                        this.player.reserve += 25;
+                    }else{
+                        create_particle(10,x.x-24,bulletY,0,0,0,0,1,"EXPLODE",1,0,0.25);
+                        x.stun = 60;
+                    }
                 }
-                if (!x.health){
-                    create_particle(12,x.x-100,x.y,0,0,0,0,-2,"EXPLODE",1,0,0.25);
-                    create_particle(16,x.x+70,x.y-70,0,0,0,0,-6,"EXPLODE",1,0,0.25);
-                    create_particle(14,x.x+34,x.y+94,0,0,0,0,-4,"EXPLODE",1,0,0.25);
-                    create_particle(10,x.x,x.y,0,0,0,0,1,"EXPLODE",0.5); 
-                    //oh yeah i should mention this is a 1 sized explosion that plays at half speed
-                    //it's not a 0.5 sized explosion and isn't meant to be
-                    x.destroy();
-                    this.enemies.splice(this.enemies.indexOf(x),1);
-                    SCORE += 320;
-                    this.player.reserve += 25;
-                }else{
-                    create_particle(10,x.x-24,bulletY,0,0,0,0,1,"EXPLODE",1,0,0.25);
-                    x.stun = 60;
-                }
-            }
 
             //--collision with player
             //super parries were too overpowered when accounted for here so only normal parries stun
@@ -282,6 +289,17 @@ class Shmup extends Phaser.Scene {
                     x.timeToFlee -= 20*(x.timeToFlee>30)*DELTATIME;
                 }
                 this.player.hit = 1;
+            }
+
+            //--if object is a bullet
+            if (x.type == "bullet"){
+                x.x -= 3;
+                x.angle ++;
+                if (x.x < 0 || x.stun){
+                    x.destroy();
+                    this.enemies.splice(this.enemies.indexOf(x),1);
+                }
+                continue;
             }
 
             //--if object is not a enemy but a part of a larger enemy
@@ -350,6 +368,21 @@ class Shmup extends Phaser.Scene {
             }
             
             //--firing bullets
+            if (!(Math.floor(Math.random()*5) || (x.timeToFlee%30) || x.attacking > 0)){
+                let firedbullet = {
+                    x:x.x,
+                    y:x.y,
+                    scale:{x:2,y:2},
+                    frame:81,
+                    key:"SHIPS",
+                    add:1,
+                    angle:-90
+                }
+                firedbullet = this.make.sprite(firedbullet);
+                firedbullet.type = "bullet";
+                firedbullet.timeToFlee = 0;
+                this.enemies.push(firedbullet);
+            }
 
             //--attacking state
             if (!x.attacking){
@@ -379,7 +412,7 @@ class Shmup extends Phaser.Scene {
             if (x.attacking < 0){
                 let numAttackers = 0
                 for (let y of this.enemies){
-                    if (y.attacking > 1 && y != x)
+                    if (y.attacking > -20 && y != x)
                         numAttackers ++;
                     if (numAttackers > 1){
                         x.attacking --;
@@ -398,7 +431,6 @@ class Shmup extends Phaser.Scene {
         if (!(this.waves%40) && this.waves < 40*5)
             create_enemy(250)
         this.waves ++;
-        console.log(this.waves)
 
         //handle player parry
         if (this.superParry && this.player.hit){
@@ -457,6 +489,8 @@ class Shmup extends Phaser.Scene {
 
         //handle player death
         if (this.corpse){
+            BGMACROSSLEVELS.detune -= 5;
+            BGMACROSSLEVELS.rate = Math.min(BGMACROSSLEVELS.rate-0.01,0.01);
             this.corpse.angle += 50*DELTATIME;
             this.corpse.x = Math.min(this.corpse.x + this.corpse.hsp*DELTATIME,780);
             this.corpse.y += this.corpse.vsp*DELTATIME;
@@ -474,12 +508,19 @@ class Shmup extends Phaser.Scene {
                 this.player.invincible = 240;
                 this.player.inNoSpin = 1;
             }
-            if (LIVES && !this.corpse.alpha)
-                this.player.x += ((this.corpse.hsp+240)/40)*DELTATIME
+            if (LIVES && !this.corpse.alpha){
+                this.player.x += ((this.corpse.hsp+240)/40)*DELTATIME;
+                BGMACROSSLEVELS.detune = Math.min(10+BGMACROSSLEVELS.detune,0);
+                BGMACROSSLEVELS.rate = Math.min(0.03+BGMACROSSLEVELS.rate,1);
+            }
             if (this.corpse.hsp < -240){
                 this.corpse.destroy();
                 this.corpse = null;
-                this.player.dead = !LIVES;
+                if (LIVES){
+                    this.player.dead = 0;
+                    BGMACROSSLEVELS.detune = 0;
+                    BGMACROSSLEVELS.rate = 1;
+                }
             }
         }
 
@@ -566,12 +607,24 @@ class Shmup extends Phaser.Scene {
         this.scoreboard[0].setStrokeStyle(4,0xff0000+0xffff*Math.floor(this.player.anim/FLASHINGSPEED),100);
         this.scoreboard[1].setColor(Math.floor(this.player.anim/FLASHINGSPEED) ? "#f00" : "#fff");
         this.scoreboard[2].setColor(Math.floor(this.player.anim/FLASHINGSPEED) ? "#f00" : "#fff");
-        this.scoreboard[1].setText("LEVEL "+(""+(LEVEL%100)).padStart(2,"0")+" SCORE "+(""+(SCORE%100000000)).padStart(8,"0"));
+        this.scoreboard[1].setText("LEVEL "+(""+(LEVEL%100)).padStart(2,"0")+" SCORE "+((""+Math.abs(SCORE%100000000)).padStart(8,"0")).padStart(10*(SCORE<0),"-"));
         this.scoreboard[2].setText("CACHE "+((""+(this.player.reserve/100+0.001)).padEnd(4,"0")).slice(0,4)+" LIVES "+(""+(LIVES%100)).padStart(2,"0"));
         
         //handle backdrop
         this.backdrop.currentframe = (this.backdrop.currentframe+DELTATIME/FLASHINGSPEED)%30;
         this.backdrop.setFrame(Math.floor(this.backdrop.currentframe));
+
+        //handle transitions
+        if ((this.player.dead && !this.corpse) || (0))
+            this.fadeInOut.alpha += 0.25;
+        else
+            this.fadeInOut.alpha *= 0.9;
+
+        if (this.player.dead && this.fadeInOut.alpha >= 1){
+            this.scene.start('GameOver');
+            BGMACROSSLEVELS.destroy();
+        }
+            
     }
 }
 
