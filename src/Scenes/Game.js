@@ -16,6 +16,8 @@ class Shmup extends Phaser.Scene {
         this.SCOREMULT = 1;
     }
     preload(){
+        this.load.setPath("./assets/music/");
+        this.load.audio("FLIGHT", "theGauntletAndTheDragon.wav");
         this.load.setPath("./assets/visuals/");
         this.load.spritesheet("SHIPS", "simpleSpace_tiles.png",{frameWidth:32});
         this.load.spritesheet("SHIELD", "ElectricShield.png",{frameWidth:80});
@@ -28,9 +30,14 @@ class Shmup extends Phaser.Scene {
         //loadFont("OLDFAX", "assets/visuals/OLDFAX.ttf");
     }
     create(){
+        if (!BGMACROSSLEVELS)
+            BGMACROSSLEVELS = this.sound.add("FLIGHT",{loop: 1,volume:AUDIO.mstr*AUDIO.bgm});
+        if ((!BGMACROSSLEVELS.isPlaying))
+            BGMACROSSLEVELS.play();
         //i could set the depth of this a little lower but i like the way it looks so im keeping it
         this.backdrop = this.make.sprite({x:400,y:350,scale:{x:2,y:1.4},key:"BACKDROP",add:1,alpha:0.3});
         this.backdrop.currentframe = 0;
+        this.backdrop.depth = -20;
         this.player = this.make.sprite({x:100,y:350,scale:{x:2,y:2},key:"SHIPS",add:1});
         this.player.sparkEffect = this.make.sprite({scale:{x:1,y:2.5},key:"SPARKS",origin:{x:0.5,y:1},angle:-90,add:1});
         this.player.sparkEffect.alpha = PARTICLES;
@@ -58,6 +65,8 @@ class Shmup extends Phaser.Scene {
         this.enemies = [];
         this.enemyBullet = [];
         this.boundToEnemies = [];
+        this.waves = 0;
+        //[250,"stop",150,350,"stop",100,"delay",200,"delay","flip",500,600,"stop","flip","delay",350,200,"flip",500,"end"];
 
         this.input.keyboard.on('keydown',(event) => {
             switch ((event.key).toLowerCase()){
@@ -87,6 +96,10 @@ class Shmup extends Phaser.Scene {
                         this.parry = 60;
                     this.superParry = 1&&(!this.cantSuperParry);
                     this.cantSuperParry = 1;
+                    break;
+                case "escape":
+                    this.scene.start('TitleScreen');
+                    BGMACROSSLEVELS.destroy();
                     break;
             }
         });
@@ -183,7 +196,7 @@ class Shmup extends Phaser.Scene {
         //handle enemies
         function create_enemy(y,entrancePath="sine",follows=0,flip=0,superFlip=0){
             let newEnemy = {
-                x:800*!superFlip,
+                x:1200*!superFlip-200,
                 y:y+Math.abs(PATHS[entrancePath][1]-600*flip),
                 scale:{x:2,y:2},
                 frame:28,
@@ -193,6 +206,8 @@ class Shmup extends Phaser.Scene {
             };
             //why not use thisPassable since i have it already
             newEnemy = thisPassable.make.sprite(newEnemy);
+            newEnemy.yDisplacement = y;
+            newEnemy.pointInSeq = 0;
             newEnemy.stun = 0;
             newEnemy.follows = follows;
             newEnemy.flip = flip;
@@ -276,9 +291,6 @@ class Shmup extends Phaser.Scene {
                 continue;
             }
 
-            //enemy FSM
-            //--entering state
-
             //--fleeing state
             if (x.timeToFlee < -60){
                 x.setFrame(28);
@@ -312,6 +324,31 @@ class Shmup extends Phaser.Scene {
                 continue;
             }
             
+            //enemy FSM
+            //--entering state
+            if (x.pointInSeq < PATHS[x.type].length){
+                //console.log(x.pointInSeq)
+                let goTo = [PATHS[x.type][x.pointInSeq]+x.yDisplacement,PATHS[x.type][x.pointInSeq+1]+x.yDisplacement]
+                enemy_pathing(x,goTo,1)
+                if ((Math.abs(x.x-goTo[0])<15 && Math.abs(x.y-goTo[1])<15))
+                    x.pointInSeq +=2;
+                for (let y of this.enemies){
+                    if (x == y)
+                        continue;
+                    if (y.yDisplacement != x.yDisplacement)
+                        continue;
+                    if (y.type != x.type)
+                        continue;
+                    if (y.pointInSeq < PATHS[x.type].length)
+                        continue;
+                    else
+                        y.attacking = -Math.floor(Math.random()*5)*30-10;
+                    if ((Math.abs(x.x-y.x)<50 && Math.abs(x.y-y.y)<50))
+                        x.pointInSeq = NaN;
+                }
+                continue;
+            }
+            
             //--firing bullets
 
             //--attacking state
@@ -339,12 +376,29 @@ class Shmup extends Phaser.Scene {
                 x.attacking = -Math.floor(Math.random()*60)-60;
             else if(x.attacking == 1)
                 x.attacking = -Math.floor(Math.random()*120)-120;
+            if (x.attacking < 0){
+                let numAttackers = 0
+                for (let y of this.enemies){
+                    if (y.attacking > 1 && y != x)
+                        numAttackers ++;
+                    if (numAttackers > 1){
+                        x.attacking --;
+                        break;
+                    }
+                }
+            }
 
             //--idle state
             x.angle = -90;
             x.timeToFlee -= DELTATIME;
             x.attacking += DELTATIME;
         }
+
+        //handle waves
+        if (!(this.waves%40) && this.waves < 40*5)
+            create_enemy(250)
+        this.waves ++;
+        console.log(this.waves)
 
         //handle player parry
         if (this.superParry && this.player.hit){
@@ -513,11 +567,11 @@ class Shmup extends Phaser.Scene {
         this.scoreboard[1].setColor(Math.floor(this.player.anim/FLASHINGSPEED) ? "#f00" : "#fff");
         this.scoreboard[2].setColor(Math.floor(this.player.anim/FLASHINGSPEED) ? "#f00" : "#fff");
         this.scoreboard[1].setText("LEVEL "+(""+(LEVEL%100)).padStart(2,"0")+" SCORE "+(""+(SCORE%100000000)).padStart(8,"0"));
-        this.scoreboard[2].setText("CACHE "+((""+(this.player.reserve/100+0.001)).padEnd(4,"0")).slice(0,4)+" LIVES "+(""+(LEVEL%100)).padStart(2,"0"));
+        this.scoreboard[2].setText("CACHE "+((""+(this.player.reserve/100+0.001)).padEnd(4,"0")).slice(0,4)+" LIVES "+(""+(LIVES%100)).padStart(2,"0"));
         
         //handle backdrop
         this.backdrop.currentframe = (this.backdrop.currentframe+DELTATIME/FLASHINGSPEED)%30;
-        this.backdrop.setFrame(Math.floor(this.backdrop.currentframe))
+        this.backdrop.setFrame(Math.floor(this.backdrop.currentframe));
     }
 }
 

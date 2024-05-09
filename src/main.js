@@ -36,7 +36,7 @@ PARTICLES = 1;
 DELTATIME = 1;
 AUDIO = {
     mstr: 0.8,
-    sfx: 0,
+    sfx: 1,
     bgm: 1
 };
 CONTROLCONFIG = {
