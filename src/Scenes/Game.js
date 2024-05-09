@@ -106,6 +106,8 @@ class Shmup extends Phaser.Scene {
                     this.scene.start('TitleScreen');
                     BGMACROSSLEVELS.destroy();
                     BGMACROSSLEVELS = null;
+                    SCORE = 0;
+                    LIVES = 3;
                     break;
             }
         });
@@ -282,10 +284,10 @@ class Shmup extends Phaser.Scene {
 
             //--collision with player
             //super parries were too overpowered when accounted for here so only normal parries stun
-            let lowestDist = 26+(this.parry>(55+PARRYWINDOW))*24; 
+            let lowestDist = 26+(this.parry>=(55-PARRYWINDOW))*24; 
             //invincible check is to prevent miss timed parries from being partially beneficial missing a parry is punishing
             if ((Math.abs(x.x-this.player.x) < lowestDist) && (Math.abs(x.y-this.player.y) < lowestDist) && !this.player.invincible && !x.stun){
-                if (this.parry>(55+PARRYWINDOW)){
+                if (this.parry>=(55-PARRYWINDOW)){
                     x.stun = 60;
                     x.timeToFlee -= 20*(x.timeToFlee>30)*DELTATIME;
                 }
@@ -446,7 +448,7 @@ class Shmup extends Phaser.Scene {
                 create_particle(12,this.player.x,this.player.y,-x*12,-y*12,x,y,60);
                 create_particle(FLASHINGSPEED*2-6,this.player.x-10,this.player.y-3,0,0,0,0,1,"EXPLODE",0,0,0.2,1/(FLASHINGSPEED-3));
             }
-        }else if (this.parry > (55+PARRYWINDOW) && this.player.hit){
+        }else if (this.parry >= (55-PARRYWINDOW) && this.player.hit){
             this.player.hit = 0;
             this.player.health += Math.floor(this.player.reserve/100);
             this.player.reserve = 0;

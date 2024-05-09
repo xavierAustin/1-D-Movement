@@ -185,6 +185,7 @@ class OptionsMenu extends Phaser.Scene {
                             break;
                         case 540:
                             PARRYWINDOW = Math.floor((x.width/335)*20)-5;
+                            console.log(PARRYWINDOW)
                             this.titles[8].text = "PARRY STRICTNESS:"+((PARRYWINDOW+5)+"f").padStart(5," ");
                             break;
                         case 565:
