@@ -29,15 +29,15 @@ BGMACROSSLEVELS = null;
 SCORE = 0;
 LEVEL = 0;
 LIVES = 3;
-PARRYWINDOW = 0;
+PARRYWINDOW = 1;
 ENDLESS = 0;
 FLASHINGSPEED = 4;
 PARTICLES = 1;
 DELTATIME = 1;
 AUDIO = {
     mstr: 0.8,
-    bgm: 1,
-    sfx: 1
+    sfx: 0,
+    bgm: 1
 };
 CONTROLCONFIG = {
     up:"w",
