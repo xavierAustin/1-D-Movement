@@ -66,11 +66,32 @@ class Shmup extends Phaser.Scene {
         }
         this.enemies = [];
         //this.enemyBullet = [];
-        this.wavetimer = 0;
+        this.wavenumber = 0;
         this.waves = [
-            ["sine",320]
+            //Level 1
+            [
+                230,
+                300,
+                45,
+                "finished"
+            ],
+            //Level 2
+            [
+                
+            ],
+            //Level 3
+            [
+                
+            ],
+            //Level 4
+            [
+                
+            ],
+            //Endless
+            [
+                "finished"
+            ]
         ]
-        this.waves = 0;
         //[250,"stop",150,350,"stop",100,"delay",200,"delay","flip",500,600,"stop","flip","delay",350,200,"flip",500,"end"];
 
         this.input.keyboard.on('keydown',(event) => {
@@ -431,9 +452,13 @@ class Shmup extends Phaser.Scene {
         }
 
         //handle waves
-        if (!(this.waves%40) && this.waves < 40*5)
-            create_enemy(250)
-        this.waves ++;
+        if (!this.enemies.length){
+            while (this.waves[LEVEL][this.wavenumber] != "finished" && this.waves[LEVEL][this.wavenumber]){
+                create_enemy(this.waves[LEVEL][this.wavenumber])
+                this.wavenumber ++;
+            }
+            this.wavenumber ++;
+        }
 
         //handle player parry
         if (this.superParry && this.player.hit){
@@ -604,13 +629,12 @@ class Shmup extends Phaser.Scene {
         //--flashing
         this.player.setFrame(Math.floor(this.player.anim/FLASHINGSPEED)+this.player.health*2-2);
         this.player.anim = (this.player.anim+DELTATIME)%(2*FLASHINGSPEED);
-           
         
         //handle scoreboard
         this.scoreboard[0].setStrokeStyle(4,0xff0000+0xffff*Math.floor(this.player.anim/FLASHINGSPEED),100);
         this.scoreboard[1].setColor(Math.floor(this.player.anim/FLASHINGSPEED) ? "#f00" : "#fff");
         this.scoreboard[2].setColor(Math.floor(this.player.anim/FLASHINGSPEED) ? "#f00" : "#fff");
-        this.scoreboard[1].setText("LEVEL "+(""+(LEVEL%100)).padStart(2,"0")+" SCORE "+((""+Math.abs(SCORE%100000000)).padStart(8,"0")).padStart(10*(SCORE<0),"-"));
+        this.scoreboard[1].setText("LEVEL "+(""+(LEVEL%100)).padStart(2,"0")+" SCORE "+((""+Math.abs(SCORE%100000000)).padStart(8,"0")).padStart(9*(SCORE<0),"\u23AF"));
         this.scoreboard[2].setText("CACHE "+((""+(this.player.reserve/100+0.001)).padEnd(4,"0")).slice(0,4)+" LIVES "+(""+(LIVES%100)).padStart(2,"0"));
         
         //handle backdrop
@@ -618,7 +642,7 @@ class Shmup extends Phaser.Scene {
         this.backdrop.setFrame(Math.floor(this.backdrop.currentframe));
 
         //handle transitions
-        if ((this.player.dead && !this.corpse) || (0))
+        if ((this.player.dead && !this.corpse) || ((this.waves[LEVEL].length-1 < this.wavenumber) && !this.enemies.length))
             this.fadeInOut.alpha += 0.25;
         else
             this.fadeInOut.alpha *= 0.9;
@@ -627,8 +651,9 @@ class Shmup extends Phaser.Scene {
             this.scene.start('GameOver');
             BGMACROSSLEVELS.destroy();
             BGMACROSSLEVELS = null;
+        }else if (this.fadeInOut.alpha >= 1){
+            this.scene.start('Shmup');
         }
-            
     }
 }
 

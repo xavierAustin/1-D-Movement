@@ -1,16 +1,16 @@
 class GameOver extends Phaser.Scene {
     constructor(){
-        super("GameOver")
+        super("GameFinished")
     }
     preload(){
-        //sorry nothing!
+        this.load.audio("FINISHED","./assets/music/sephaCarefree.mp3")
     }
     create(){
-        this.bgm = this.sound.add("DREAD",{volume: AUDIO.mstr*AUDIO.bgm,loop:1});
+        this.bgm = this.sound.add("FINISHED",{volume: AUDIO.mstr*AUDIO.bgm,loop:1});
         this.bgm.play();
         this.titles = [
-            this.add.text(400,300,"GAME OVER",{fontFamily:"'OLDFAX'",fontSize:35}).setOrigin(0.5).setLetterSpacing(35),
-            this.add.text(400,400,(((""+Math.abs(SCORE%100000000)).padStart(8,"0")).padStart(9*(SCORE<0),"⎯")),{fontFamily:"'OLDFAX'",fontSize:15}).setOrigin(0.5).setLetterSpacing(35)
+            this.add.text(400,300,"GAME OVER",{fontFamily:"'OLDFAX'",fontSize:35}).setOrigin(0.5).setLetterSpacing(15),
+            this.add.text(400,400,((""+Math.abs(SCORE%100000000)).padStart(8,"0")).padStart(10*(SCORE<0),"-"),{fontFamily:"'OLDFAX'",fontSize:15}).setOrigin(0.5).setLetterSpacing(15)
         ]
         this.underTitles = []
         for (let x of this.titles){
@@ -20,7 +20,7 @@ class GameOver extends Phaser.Scene {
                     fontFamily:x.style.fontFamily,
                     color:"#f00",
                     fontSize:x.style.fontSize
-                }).setOrigin(0.5).setLetterSpacing(35))
+                }).setOrigin(0.5).setLetterSpacing(15))
         }
         this.fadeIn = this.add.rectangle(400,300,800,600,0xff0000,1)
         this.fadeIn.depth = 100
@@ -39,7 +39,7 @@ class GameOver extends Phaser.Scene {
         SCORE = 0;
     }
     update(){
-        this.bgm.detune = (Math.sin(this.flashslow))*50-300;
+        //this.bgm.detune = (Math.sin(this.flashslow))*50-300;
         this.flashslow = (this.flashslow + 0.01) % (Math.PI*2);
         this.changelettertimer = (this.changelettertimer + 1)%10;
         for (let x of this.titles)
